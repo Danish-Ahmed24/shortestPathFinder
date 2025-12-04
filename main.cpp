@@ -565,7 +565,7 @@ void displayMenu() {
     cout << "13. Exit\n";
     cout << "================================================\n";
     cout << "Note: Traffic level 0-7 (normal), 8-10 (auto-blocks)\n";
-    cout << "      Cost = Distance + (Distance × Traffic × 10%)\n";
+    cout << "      Cost = Distance + (Distance x Traffic x 10%)\n";
     cout << "================================================\n";
     cout << "Enter your choice: ";
 }
