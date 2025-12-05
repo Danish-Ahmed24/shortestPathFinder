@@ -319,7 +319,7 @@ public:
     }
 
     int calculateEffectiveCost(int distance, int traffic) {
-       return distance + (traffic * 10); 
+       return distance + (distance * traffic / 10); 
     }
 
     void dijkstra(int src, int dest) {
@@ -419,8 +419,8 @@ public:
         addEdge(2, 3, 120, false);
         addEdge(3, 4, 200, false);
         addEdge(4, 6, 210, false);
-        addEdge(6, 5, 180, false);
         addEdge(4, 5, 80, false);
+        addEdge(6, 5, 180, false);
         
         cout << "\nSample data loaded successfully!\n";
     }
