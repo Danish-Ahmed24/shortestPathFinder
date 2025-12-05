@@ -4,8 +4,6 @@
 #include <vector>
 #include <climits>
 #include <string>
-#include <fstream>
-#include <sstream>
 using namespace std;
 
 class City {
@@ -13,28 +11,23 @@ public:
     int distance;
     string name;
 
-    City(string name = "", int distance = INT_MAX) {
-        this->name = name;
-        this->distance = distance;
-    }
+    City(string name = "", int distance = INT_MAX) : name(name), distance(distance) {}
 };
 
-// Class to store route information
 class Route {
 public:
     int neighbor;
     int distance;
-    int traffic;        // Traffic level (0-10)
-    bool isBlocked;     // Route block status
+    int traffic;
+    bool isBlocked;
     
     Route(int n, int d) : neighbor(n), distance(d), traffic(0), isBlocked(false) {}
 };
 
-// Custom MinHeap class for Dijkstra's algorithm
 class MinHeap {
 private:
-    vector<pair<int, int>> heap; // {distance, node}
-    unordered_map<int, int> indexMap; // node -> index in heap
+    vector<pair<int, int>> heap;
+    unordered_map<int, int> indexMap;
 
     int parent(int i) { return (i - 1) / 2; }
     int leftChild(int i) { return 2 * i + 1; }
@@ -172,7 +165,6 @@ public:
             return;
         }
         
-        // Check for duplicate edges
         for (auto& route : adj[u]) {
             if (route.neighbor == v) {
                 cout << "Warning: Route already exists between " << cities[u].name 
@@ -268,7 +260,6 @@ public:
             if (route.neighbor == v) {
                 route.traffic = trafficLevel;
                 
-                // Auto-block if traffic is too high (>= 8)
                 if (trafficLevel >= 8 && !route.isBlocked) {
                     route.isBlocked = true;
                     cout << "Traffic set to " << trafficLevel << " on route from " 
@@ -328,9 +319,7 @@ public:
     }
 
     int calculateEffectiveCost(int distance, int traffic) {
-        // Cost = distance + (distance * traffic * 0.1)
-        // Traffic adds 10% per traffic level to the base distance
-        return distance + (distance * traffic / 10);
+       return distance + (traffic * 10); 
     }
 
     void dijkstra(int src, int dest) {
@@ -376,10 +365,8 @@ public:
             for (auto& route : adj[node]) {
                 int nbr = route.neighbor;
                 
-                // Skip blocked routes
                 if (route.isBlocked) continue;
                 
-                // Calculate effective cost considering traffic
                 int effectiveCost = calculateEffectiveCost(route.distance, route.traffic);
 
                 if (distances[node] != INT_MAX && distances[node] + effectiveCost < distances[nbr]) {
@@ -400,6 +387,7 @@ public:
 
         vector<int> path;
         int currentNode = dest;
+        
         while (currentNode != src) {
             path.push_back(currentNode);
             currentNode = parents[currentNode];
@@ -419,122 +407,22 @@ public:
     }
 
     void loadSampleData() {
-        addCity("City1");
-        addCity("City2");
-        addCity("City3");
-        addCity("City4");
-        addCity("City5");
-        addCity("City6");
-        addCity("City7");
-        addCity("City8");
+        addCity("karachi");
+        addCity("hyderabad");
+        addCity("sukkur");
+        addCity("islamabad");
+        addCity("lahore");
+        addCity("wazirabad");
 
-        addEdge(1, 3, 2, false);
-        addEdge(2, 3, 4, false);
-        addEdge(3, 5, 6, false);
-        addEdge(3, 4, 3, false);
-        addEdge(4, 6, 2, false);
-        addEdge(5, 6, 1, false);
-        addEdge(7, 8, 1, false);
+        addEdge(1, 2, 150, false);
+        addEdge(1, 5, 220, false);
+        addEdge(2, 3, 120, false);
+        addEdge(3, 4, 200, false);
+        addEdge(4, 6, 210, false);
+        addEdge(6, 5, 180, false);
+        addEdge(4, 5, 80, false);
         
         cout << "\nSample data loaded successfully!\n";
-    }
-
-    void saveToFile(const string& filename) {
-        ofstream outFile(filename);
-        
-        if (!outFile.is_open()) {
-            cout << "Error: Unable to create/open file '" << filename << "'!\n";
-            return;
-        }
-
-        // Save next city ID
-        outFile << "NEXT_ID " << nextCityId << endl;
-        
-        // Save cities
-        outFile << "CITIES " << cities.size() << endl;
-        for (auto& city : cities) {
-            outFile << city.first << " " << city.second.name << endl;
-        }
-
-        // Save edges with traffic and block status
-        int edgeCount = 0;
-        for (auto& adjList : adj) {
-            edgeCount += adjList.second.size();
-        }
-        
-        outFile << "EDGES " << edgeCount << endl;
-        for (auto& adjList : adj) {
-            int u = adjList.first;
-            for (auto& route : adjList.second) {
-                outFile << u << " " << route.neighbor << " " << route.distance 
-                       << " " << route.traffic << " " << route.isBlocked << endl;
-            }
-        }
-
-        outFile.close();
-        cout << "Graph data saved successfully to '" << filename << "'!\n";
-        cout << "Saved " << cities.size() << " cities and " << edgeCount << " routes.\n";
-    }
-
-    void loadFromFile(const string& filename) {
-        ifstream inFile(filename);
-        
-        if (!inFile.is_open()) {
-            cout << "Error: Unable to open file '" << filename << "'!\n";
-            return;
-        }
-
-        // Clear existing data
-        cities.clear();
-        adj.clear();
-
-        string line, keyword;
-        int count;
-
-        // Read next city ID
-        inFile >> keyword >> nextCityId;
-        inFile.ignore();
-
-        // Read cities
-        inFile >> keyword >> count;
-        inFile.ignore();
-        
-        for (int i = 0; i < count; i++) {
-            getline(inFile, line);
-            istringstream iss(line);
-            int id;
-            string name;
-            
-            iss >> id;
-            getline(iss, name);
-            
-            // Trim leading space
-            if (!name.empty() && name[0] == ' ') {
-                name = name.substr(1);
-            }
-            
-            cities[id] = City(name);
-        }
-
-        // Read edges
-        inFile >> keyword >> count;
-        inFile.ignore();
-        
-        for (int i = 0; i < count; i++) {
-            int u, v, distance, traffic;
-            bool isBlocked;
-            inFile >> u >> v >> distance >> traffic >> isBlocked;
-            inFile.ignore();
-            
-            Route route(v, distance);
-            route.traffic = traffic;
-            route.isBlocked = isBlocked;
-            adj[u].push_back(route);
-        }
-
-        inFile.close();
-        cout << "Graph data loaded successfully from '" << filename << "'!\n";
-        cout << "Loaded " << cities.size() << " cities and " << count << " routes.\n";
     }
 
     void clearGraph() {
@@ -559,10 +447,8 @@ void displayMenu() {
     cout << "7.  Unblock a Route\n";
     cout << "8.  Set Traffic Level on Route\n";
     cout << "9.  Load Sample Data\n";
-    cout << "10. Save Graph to File\n";
-    cout << "11. Load Graph from File\n";
-    cout << "12. Clear Graph\n";
-    cout << "13. Exit\n";
+    cout << "10. Clear Graph\n";
+    cout << "11. Exit\n";
     cout << "================================================\n";
     cout << "Note: Traffic level 0-7 (normal), 8-10 (auto-blocks)\n";
     cout << "      Cost = Distance + (Distance x Traffic x 10%)\n";
@@ -580,7 +466,7 @@ int main() {
         if (!(cin >> choice)) {
             cin.clear();
             cin.ignore(10000, '\n');
-            cout << "Invalid input! Please enter a number between 1 and 13.\n";
+            cout << "Invalid input! Please enter a number between 1 and 11.\n";
             continue;
         }
 
@@ -743,32 +629,6 @@ int main() {
                 break;
             }
             case 10: {
-                string filename;
-                cout << "Enter filename to save (e.g., graph.txt): ";
-                cin >> filename;
-                
-                if (filename.empty()) {
-                    filename = "graph.txt";
-                    cout << "Using default filename: graph.txt\n";
-                }
-                
-                g.saveToFile(filename);
-                break;
-            }
-            case 11: {
-                string filename;
-                cout << "Enter filename to load (e.g., graph.txt): ";
-                cin >> filename;
-                
-                if (filename.empty()) {
-                    filename = "graph.txt";
-                    cout << "Using default filename: graph.txt\n";
-                }
-                
-                g.loadFromFile(filename);
-                break;
-            }
-            case 12: {
                 char confirm;
                 cout << "Are you sure you want to clear the entire graph? (y/n): ";
                 cin >> confirm;
@@ -779,7 +639,7 @@ int main() {
                 }
                 break;
             }
-            case 13: {
+            case 11: {
                 cout << "Exiting program. Goodbye!\n";
                 break;
             }
@@ -787,7 +647,7 @@ int main() {
                 cout << "Invalid choice! Please try again.\n";
             }
         }
-    } while (choice != 13);
+    } while (choice != 11);
 
     return 0;
 }
